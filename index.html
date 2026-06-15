@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>AirSketch AI – Draw Without Touch</title>
+<!-- MediaPipe Hand Tracking CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root{--pr:#2563EB;--se:#7C3AED;--bg:#0F172A;--card:#1E293B;--tx:#FFFFFF;--ac:#06B6D4;--gr:linear-gradient(135deg,#2563EB,#7C3AED);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--tx);overflow-x:hidden;}
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:#0F172A;}::-webkit-scrollbar-thumb{background:var(--ac);border-radius:3px;}
+
+/* NAV */
+nav{position:fixed;top:0;width:100%;z-index:1000;background:rgba(15,23,42,0.92);backdrop-filter:blur(16px);border-bottom:1px solid rgba(6,182,212,0.15);padding:0 4%;}
+.nav-in{max-width:1440px;margin:auto;display:flex;align-items:center;justify-content:space-between;height:64px;}
+.logo{font-size:1.4rem;font-weight:800;background:var(--gr);-webkit-background-clip:text;-webkit-text-fill-color:transparent;cursor:pointer;}
+.nav-links{display:flex;gap:1.5rem;list-style:none;}
+.nav-links li{cursor:pointer;color:rgba(255,255,255,0.7);font-size:.88rem;font-weight:500;transition:.3s;}
+.nav-links li:hover{color:var(--ac);}
+.nav-btns{display:flex;gap:.6rem;}
+.btn{padding:.5rem 1.1rem;border-radius:8px;font-size:.85rem;font-weight:600;cursor:pointer;transition:.3s;border:none;}
+.btn-o{background:transparent;border:1.5px solid var(--ac);color:var(--ac);}
+.btn-o:hover{background:var(--ac);color:#000;}
+.btn-p{background:var(--gr);color:#fff;}
+.btn-p:hover{opacity:.85;}
+.hbg{display:none;flex-direction:column;gap:5px;cursor:pointer;}
+.hbg span{width:24px;height:2px;background:#fff;border-radius:2px;}
+.mob-menu{display:none;position:fixed;top:64px;left:0;width:100%;background:#0F172A;padding:1.25rem 4%;border-bottom:1px solid rgba(6,182,212,.1);z-index:999;}
+.mob-menu.open{display:block;}
+.mob-menu div{padding:.65rem 0;color:rgba(255,255,255,.75);border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;}
+.mob-menu div:hover{color:var(--ac);}
+.mob-btns{display:flex;gap:.6rem;margin-top:.75rem;}
+
+section{padding:80px 4%;}
+.wrap{max-width:1440px;margin:auto;}
+.tag{display:inline-block;background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.3);color:var(--ac);font-size:.72rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:.3rem .8rem;border-radius:99px;margin-bottom:.9rem;}
+.sec-h{font-size:clamp(1.7rem,4vw,2.8rem);font-weight:800;line-height:1.2;}
+.gr-t{background:var(--gr);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.sec-s{color:rgba(255,255,255,.55);max-width:580px;margin:.6rem 0 0;line-height:1.7;font-size:.92rem;}
+
+/* HERO */
+#home{min-height:100vh;display:flex;align-items:center;padding-top:90px;position:relative;overflow:hidden;}
+.hero-g{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center;}
+.h-badge{display:inline-flex;align-items:center;gap:.5rem;background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.3);color:var(--ac);padding:.35rem .9rem;border-radius:99px;font-size:.78rem;font-weight:600;margin-bottom:1.25rem;}
+.h-title{font-size:clamp(1.9rem,4.5vw,3.3rem);font-weight:900;line-height:1.1;margin-bottom:1rem;}
+.h-desc{color:rgba(255,255,255,.6);font-size:1rem;line-height:1.75;margin-bottom:1.75rem;max-width:460px;}
+.h-btns{display:flex;gap:.9rem;flex-wrap:wrap;}
+.h-btns .btn{padding:.7rem 1.6rem;font-size:.92rem;border-radius:10px;}
+.h-stats{display:flex;gap:2rem;margin-top:2.25rem;flex-wrap:wrap;}
+.stat .n{font-size:1.5rem;font-weight:800;background:var(--gr);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.stat .l{font-size:.72rem;color:rgba(255,255,255,.45);margin-top:.15rem;}
+.blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.1;pointer-events:none;}
+.mini-cv{background:var(--card);border-radius:18px;border:1px solid rgba(6,182,212,.2);overflow:hidden;box-shadow:0 0 40px rgba(6,182,212,.15);position:relative;height:320px;display:flex;align-items:center;justify-content:center;}
+.mini-cv canvas{position:absolute;inset:0;width:100%;height:100%;}
+
+/* FEATURES */
+#features{background:rgba(30,41,59,.35);}
+.fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:1.25rem;margin-top:2.5rem;}
+.fc{background:var(--card);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:1.6rem;transition:.3s;}
+.fc:hover{border-color:rgba(6,182,212,.25);transform:translateY(-4px);box-shadow:0 0 24px rgba(6,182,212,.15);}
+.fi{font-size:1.8rem;margin-bottom:.85rem;display:block;}
+.ft{font-size:1rem;font-weight:700;margin-bottom:.4rem;}
+.fd{color:rgba(255,255,255,.5);font-size:.85rem;line-height:1.6;}
+
+/* HOW IT WORKS */
+.steps{display:flex;gap:1rem;margin-top:2.5rem;flex-wrap:wrap;justify-content:center;}
+.step{flex:1;min-width:170px;text-align:center;padding:0 .75rem;}
+.si{width:76px;height:76px;border-radius:50%;background:var(--card);border:2px solid rgba(6,182,212,.25);display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto 1rem;position:relative;transition:.3s;}
+.step:hover .si{border-color:var(--ac);box-shadow:0 0 20px rgba(6,182,212,.25);}
+.sn{position:absolute;top:-4px;right:-4px;width:22px;height:22px;background:var(--gr);border-radius:50%;font-size:.65rem;font-weight:800;display:flex;align-items:center;justify-content:center;}
+
+/* ═══ MAIN DRAWING STUDIO ═══ */
+#demo{background:rgba(10,16,30,.6);}
+.studio{background:#0a0f1e;border:1px solid rgba(6,182,212,.2);border-radius:20px;overflow:hidden;box-shadow:0 0 60px rgba(37,99,235,.2);margin-top:2rem;}
+.studio-top{background:rgba(15,23,42,.95);padding:.6rem .9rem;display:flex;align-items:center;gap:.5rem;border-bottom:1px solid rgba(255,255,255,.07);flex-wrap:wrap;}
+.tb2{padding:.32rem .7rem;border-radius:6px;border:1px solid rgba(255,255,255,.1);background:transparent;color:rgba(255,255,255,.7);font-size:.76rem;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:.3rem;white-space:nowrap;}
+.tb2:hover,.tb2.on{background:rgba(6,182,212,.18);border-color:var(--ac);color:var(--ac);}
+.tb2.red:hover{background:rgba(239,68,68,.15);border-color:#EF4444;color:#EF4444;}
+.clrs{display:flex;gap:.3rem;margin-left:auto;}
+.cd{width:20px;height:20px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:.2s;flex-shrink:0;}
+.cd:hover,.cd.on{border-color:#fff;transform:scale(1.2);}
+.studio-body{position:relative;height:520px;background:#060d1a;overflow:hidden;}
+/* Video behind, canvas on top */
+#camVid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);display:none;z-index:1;}
+#mainCanvas{position:absolute;inset:0;width:100%;height:100%;z-index:2;cursor:crosshair;}
+/* Finger dot indicator */
+#fingerDot{position:absolute;width:22px;height:22px;border-radius:50%;border:3px solid var(--ac);box-shadow:0 0 12px var(--ac);pointer-events:none;z-index:10;display:none;transform:translate(-50%,-50%);}
+#fingerDot::after{content:'';position:absolute;width:8px;height:8px;background:var(--ac);border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);}
+/* Gesture indicator */
+#gestureBox{position:absolute;top:12px;left:12px;background:rgba(15,23,42,.85);border:1px solid rgba(6,182,212,.3);border-radius:10px;padding:.5rem .85rem;font-size:.8rem;color:var(--ac);z-index:11;display:none;backdrop-filter:blur(8px);}
+/* Status bar */
+#statusBar{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(15,23,42,.85);border:1px solid rgba(255,255,255,.1);border-radius:99px;padding:.35rem 1rem;font-size:.75rem;color:rgba(255,255,255,.55);z-index:11;white-space:nowrap;backdrop-filter:blur(8px);}
+/* Cam placeholder */
+#camPH{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:3;pointer-events:none;}
+#camPH.hide{display:none;}
+.ph-icon{font-size:3.5rem;opacity:.2;margin-bottom:.75rem;}
+.ph-txt{color:rgba(255,255,255,.3);font-size:.9rem;text-align:center;line-height:1.7;}
+
+/* GESTURES */
+.gg{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-top:2.25rem;}
+.gc{background:var(--card);border:1px solid rgba(255,255,255,.07);border-radius:13px;padding:1.4rem;text-align:center;transition:.3s;}
+.gc:hover{border-color:rgba(124,58,237,.35);transform:translateY(-3px);}
+
+/* TECH */
+.tg{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1rem;margin-top:2.5rem;}
+.tc{background:var(--card);border:1px solid rgba(255,255,255,.07);border-radius:13px;padding:1.4rem;text-align:center;transition:.3s;}
+.tc:hover{border-color:rgba(6,182,212,.25);transform:translateY(-4px);}
+
+/* CONTACT */
+#contact{background:rgba(30,41,59,.25);}
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:3rem;margin-top:2.5rem;}
+.cf{background:var(--card);border-radius:15px;padding:1.75rem;border:1px solid rgba(255,255,255,.07);}
+.fg2{margin-bottom:1.1rem;}
+.fg2 label{display:block;font-size:.8rem;color:rgba(255,255,255,.55);margin-bottom:.4rem;}
+.fg2 input,.fg2 textarea{width:100%;background:rgba(15,23,42,.8);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:.65rem .9rem;color:#fff;font-size:.88rem;transition:.3s;outline:none;font-family:inherit;}
+.fg2 input:focus,.fg2 textarea:focus{border-color:var(--ac);}
+.fg2 textarea{height:110px;resize:vertical;}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;}
+
+/* FOOTER */
+footer{background:rgba(15,23,42,.97);border-top:1px solid rgba(255,255,255,.07);padding:3.5rem 4% 1.75rem;}
+.foot-g{max-width:1440px;margin:auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:2.5rem;margin-bottom:2.5rem;}
+.foot-g p{color:rgba(255,255,255,.45);font-size:.83rem;line-height:1.7;margin:.65rem 0 1.1rem;}
+.soc{display:flex;gap:.6rem;}
+.sb{width:34px;height:34px;border-radius:7px;background:var(--card);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:.9rem;cursor:pointer;transition:.3s;}
+.sb:hover{background:var(--pr);}
+.foot-g h4{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:.9rem;}
+.foot-g ul{list-style:none;}
+.foot-g ul li{margin-bottom:.5rem;}
+.foot-g ul li span{color:rgba(255,255,255,.4);font-size:.83rem;cursor:pointer;transition:.2s;}
+.foot-g ul li span:hover{color:var(--ac);}
+.foot-b{max-width:1440px;margin:auto;padding-top:1.75rem;border-top:1px solid rgba(255,255,255,.07);display:flex;justify-content:space-between;flex-wrap:wrap;gap:.75rem;}
+.foot-b p{color:rgba(255,255,255,.25);font-size:.78rem;}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(8px);z-index:9998;align-items:center;justify-content:center;padding:1rem;}
+.modal-bg.open{display:flex;}
+.modal{background:#1E293B;border:1px solid rgba(6,182,212,.22);border-radius:18px;max-width:680px;width:100%;max-height:90vh;overflow-y:auto;}
+.modal::-webkit-scrollbar{width:4px;}
+.modal-hd{background:linear-gradient(135deg,rgba(37,99,235,.25),rgba(124,58,237,.25));border-bottom:1px solid rgba(255,255,255,.07);padding:1.4rem 1.6rem;border-radius:18px 18px 0 0;position:sticky;top:0;backdrop-filter:blur(10px);}
+.modal-close{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);font-size:.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;}
+.modal-close:hover{background:rgba(239,68,68,.2);color:#EF4444;}
+.modal-body{padding:1.6rem;}
+.m-sec{margin-bottom:1.6rem;}
+.m-sec h3{font-size:.88rem;font-weight:700;color:var(--ac);margin-bottom:.8rem;display:flex;align-items:center;gap:.4rem;}
+.feat-chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.5rem;}
+.chip{background:rgba(15,23,42,.6);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:.5rem .75rem;font-size:.78rem;color:rgba(255,255,255,.65);display:flex;align-items:center;gap:.45rem;}
+.pill-grid{display:flex;flex-wrap:wrap;gap:.4rem;}
+.pill{padding:.25rem .7rem;border-radius:99px;font-size:.74rem;font-weight:600;}
+.pill-b{background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.3);color:#93C5FD;}
+.pill-p{background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3);color:#C4B5FD;}
+.pill-c{background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.25);color:#67E8F9;}
+.step-row{display:flex;gap:.75rem;align-items:flex-start;margin-bottom:.5rem;}
+.step-n{width:20px;height:20px;border-radius:50%;background:var(--gr);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:800;flex-shrink:0;margin-top:.1rem;}
+.fut-chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.5rem;}
+
+/* NOTIF */
+.notif{position:fixed;bottom:1.75rem;right:1.75rem;background:#1E293B;border:1px solid rgba(6,182,212,.35);border-radius:11px;padding:.85rem 1.2rem;z-index:9999;font-size:.84rem;transform:translateX(220%);transition:.4s;max-width:280px;pointer-events:none;box-shadow:0 0 20px rgba(6,182,212,.1);}
+.notif.show{transform:translateX(0);}
+
+@media(max-width:1024px){.hero-g{grid-template-columns:1fr;}.cg{grid-template-columns:1fr;}.foot-g{grid-template-columns:1fr 1fr;}}
+@media(max-width:768px){.nav-links,.nav-btns{display:none;}.hbg{display:flex;}section{padding:60px 4%;}.foot-g{grid-template-columns:1fr;}.fr{grid-template-columns:1fr;}.studio-body{height:380px;}}
+@media(max-width:480px){.h-btns{flex-direction:column;}.studio-top{gap:.3rem;}}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+@keyframes glow{0%,100%{box-shadow:0 0 20px rgba(6,182,212,.15);}50%{box-shadow:0 0 40px rgba(6,182,212,.4);}}
+.floating{animation:float 4s ease-in-out infinite;}
+.glowing{animation:glow 3s ease-in-out infinite;}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-in">
+    <div class="logo" onclick="goTo('home')">AirSketch AI ✨</div>
+    <ul class="nav-links">
+      <li onclick="goTo('home')">Home</li>
+      <li onclick="goTo('features')">Features</li>
+      <li onclick="goTo('how-it-works')">How It Works</li>
+      <li onclick="goTo('demo')">Demo</li>
+      <li onclick="goTo('technology')">Technology</li>
+      <li onclick="goTo('contact')">Contact</li>
+    </ul>
+    <div class="nav-btns">
+      <button class="btn btn-o" onclick="openModal('about')">About</button>
+      <button class="btn btn-o" onclick="goTo('demo')">Try Demo</button>
+      <button class="btn btn-p" onclick="notify('⭐ GitHub repo coming soon!')">GitHub</button>
+    </div>
+    <div class="hbg" onclick="toggleMob()"><span></span><span></span><span></span></div>
+  </div>
+</nav>
+<div class="mob-menu" id="mobMenu">
+  <div onclick="goTo('home');closeMob()">🏠 Home</div>
+  <div onclick="goTo('features');closeMob()">⚡ Features</div>
+  <div onclick="goTo('how-it-works');closeMob()">🔄 How It Works</div>
+  <div onclick="goTo('demo');closeMob()">🎨 Demo</div>
+  <div onclick="goTo('technology');closeMob()">🔬 Technology</div>
+  <div onclick="goTo('contact');closeMob()">📬 Contact</div>
+  <div class="mob-btns">
+    <button class="btn btn-o" onclick="openModal('about');closeMob()">About</button>
+    <button class="btn btn-p" onclick="goTo('demo');closeMob()">Try Demo</button>
+  </div>
+</div>
+
+<!-- HERO -->
+<section id="home" style="position:relative;overflow:hidden;min-height:100vh;display:flex;align-items:center;padding-top:90px;">
+  <div class="blob" style="width:500px;height:500px;background:var(--pr);top:-120px;right:-120px;"></div>
+  <div class="blob" style="width:380px;height:380px;background:var(--se);bottom:-80px;left:-80px;"></div>
+  <div class="wrap hero-g">
+    <div>
+      <div class="h-badge">✨ AI-Powered Hand Tracking</div>
+      <h1 class="h-title">Draw in the <span class="gr-t">Air</span> with AI-Powered Hand Tracking</h1>
+      <p class="h-desc">Create digital drawings using only your hand gestures. No mouse, no touch screen — just your camera and imagination.</p>
+      <div class="h-btns">
+        <button class="btn btn-p" onclick="goTo('demo')">🎨 Start Drawing</button>
+        <button class="btn btn-o" onclick="goTo('how-it-works')">▶ How It Works</button>
+      </div>
+      <div class="h-stats">
+        <div class="stat"><div class="n">99%</div><div class="l">Accuracy</div></div>
+        <div class="stat"><div class="n">30fps</div><div class="l">Real-time</div></div>
+        <div class="stat"><div class="n">0ms</div><div class="l">Touch Needed</div></div>
+        <div class="stat"><div class="n">∞</div><div class="l">Creativity</div></div>
+      </div>
+    </div>
+    <div class="floating glowing mini-cv">
+      <canvas id="heroC"></canvas>
+      <div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);font-size:.7rem;color:rgba(255,255,255,.3);white-space:nowrap;">✨ Move mouse here to preview</div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="wrap">
+    <div class="tag">Features</div>
+    <h2 class="sec-h">Packed with <span class="gr-t">Premium</span> Features</h2>
+    <p class="sec-s">Everything you need to create stunning digital art using just your hands.</p>
+    <div class="fg">
+      <div class="fc"><span class="fi">🖐</span><div class="ft">Real-Time Hand Tracking</div><div class="fd">AI tracks your finger at 30fps using MediaPipe's 21-landmark hand model via webcam.</div></div>
+      <div class="fc"><span class="fi">🚫</span><div class="ft">Touchless Drawing</div><div class="fd">Zero physical contact. Raise your index finger in front of camera and start creating.</div></div>
+      <div class="fc"><span class="fi">🎨</span><div class="ft">Multiple Colors</div><div class="fd">Switch between colors via toolbar or hand gestures — peace sign changes color.</div></div>
+      <div class="fc"><span class="fi">🧹</span><div class="ft">Eraser Mode</div><div class="fd">Make a fist ✊ to activate eraser and wipe any part of your drawing naturally.</div></div>
+      <div class="fc"><span class="fi">💾</span><div class="ft">Save Artwork</div><div class="fd">Download your masterpiece as PNG — includes camera feed and drawing together.</div></div>
+      <div class="fc"><span class="fi">📱</span><div class="ft">Responsive Design</div><div class="fd">Works across Desktop, Laptop, Tablet and Mobile seamlessly.</div></div>
+      <div class="fc"><span class="fi">🔷</span><div class="ft">AI Shape Detection</div><div class="fd">Circles, squares, triangles auto-detected and perfected by AI.</div></div>
+      <div class="fc"><span class="fi">🎙</span><div class="ft">Voice Commands</div><div class="fd">"Change color", "Clear canvas", "Save" — speak it and AI does it.</div></div>
+      <div class="fc"><span class="fi">⏯</span><div class="ft">Drawing Replay</div><div class="fd">Watch a timelapse replay of how you created your drawing.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how-it-works" style="background:rgba(30,41,59,.3);">
+  <div class="wrap">
+    <div class="tag">Process</div>
+    <h2 class="sec-h">How It <span class="gr-t">Works</span></h2>
+    <p class="sec-s">From camera to canvas in milliseconds — powered by cutting-edge AI.</p>
+    <div class="steps">
+      <div class="step"><div class="si">📷<div class="sn">1</div></div><div style="font-weight:700;margin-bottom:.35rem;">Camera Captures</div><div style="color:rgba(255,255,255,.45);font-size:.82rem;">Webcam streams live video.</div></div>
+      <div class="step"><div class="si">🖐<div class="sn">2</div></div><div style="font-weight:700;margin-bottom:.35rem;">Hand Detected</div><div style="color:rgba(255,255,255,.45);font-size:.82rem;">MediaPipe finds 21 landmarks.</div></div>
+      <div class="step"><div class="si">☝️<div class="sn">3</div></div><div style="font-weight:700;margin-bottom:.35rem;">Finger Tracked</div><div style="color:rgba(255,255,255,.45);font-size:.82rem;">Index fingertip position tracked.</div></div>
+      <div class="step"><div class="si">🎨<div class="sn">4</div></div><div style="font-weight:700;margin-bottom:.35rem;">Drawing Appears</div><div style="color:rgba(255,255,255,.45);font-size:.82rem;">Strokes rendered on canvas.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- GESTURE SHORTCUTS -->
+<section>
+  <div class="wrap">
+    <div class="tag">Gestures</div>
+    <h2 class="sec-h">Gesture <span class="gr-t">Shortcuts</span></h2>
+    <p class="sec-s">Control everything with intuitive hand gestures.</p>
+    <div class="gg">
+      <div class="gc"><div style="font-size:2.2rem;margin-bottom:.65rem;">☝️</div><div style="font-weight:700;margin-bottom:.25rem;">Index Finger Up</div><div style="color:var(--ac);font-size:.83rem;">✏️ Draw Mode</div></div>
+      <div class="gc"><div style="font-size:2.2rem;margin-bottom:.65rem;">✌️</div><div style="font-weight:700;margin-bottom:.25rem;">Peace Sign</div><div style="color:var(--ac);font-size:.83rem;">🎨 Pause / Move</div></div>
+      <div class="gc"><div style="font-size:2.2rem;margin-bottom:.65rem;">👍</div><div style="font-weight:700;margin-bottom:.25rem;">Thumbs Up</div><div style="color:var(--ac);font-size:.83rem;">💾 Save Drawing</div></div>
+      <div class="gc"><div style="font-size:2.2rem;margin-bottom:.65rem;">✊</div><div style="font-weight:700;margin-bottom:.25rem;">Closed Fist</div><div style="color:var(--ac);font-size:.83rem;">🧹 Eraser Mode</div></div>
+      <div class="gc"><div style="font-size:2.2rem;margin-bottom:.65rem;">🖐</div><div style="font-weight:700;margin-bottom:.25rem;">Open Palm</div><div style="color:var(--ac);font-size:.83rem;">⏸ Pause Drawing</div></div>
+      <div class="gc"><div style="font-size:2.2rem;margin-bottom:.65rem;">🤙</div><div style="font-weight:700;margin-bottom:.25rem;">Call Me Sign</div><div style="color:var(--ac);font-size:.83rem;">🗑 Clear Canvas</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ DRAWING STUDIO ═══ -->
+<section id="demo">
+  <div class="wrap">
+    <div class="tag">Live Studio</div>
+    <h2 class="sec-h">AirSketch <span class="gr-t">Studio</span></h2>
+    <p class="sec-s">Enable camera → show your index finger ☝️ → draw in the air! Or use mouse/touch anytime.</p>
+
+    <div class="studio">
+      <!-- Toolbar -->
+      <div class="studio-top">
+        <button class="tb2" id="camBtn" onclick="toggleCam()">📷 Enable Camera</button>
+        <div style="width:1px;height:24px;background:rgba(255,255,255,.1);margin:0 .2rem;"></div>
+        <button class="tb2 on" id="brushBtn" onclick="setTool('brush')">🖌 Brush</button>
+        <button class="tb2" id="eraserBtn" onclick="setTool('eraser')">⬜ Eraser</button>
+        <button class="tb2 red" onclick="clearCanvas()">🗑 Clear</button>
+        <button class="tb2" onclick="saveCanvas()">💾 Save PNG</button>
+        <div style="width:1px;height:24px;background:rgba(255,255,255,.1);margin:0 .2rem;"></div>
+        <div class="clrs">
+          <div class="cd on" style="background:#06B6D4;" onclick="setClr('#06B6D4',this)" title="Cyan"></div>
+          <div class="cd" style="background:#7C3AED;" onclick="setClr('#7C3AED',this)" title="Purple"></div>
+          <div class="cd" style="background:#EF4444;" onclick="setClr('#EF4444',this)" title="Red"></div>
+          <div class="cd" style="background:#F59E0B;" onclick="setClr('#F59E0B',this)" title="Yellow"></div>
+          <div class="cd" style="background:#10B981;" onclick="setClr('#10B981',this)" title="Green"></div>
+          <div class="cd" style="background:#FF6EC7;" onclick="setClr('#FF6EC7',this)" title="Pink"></div>
+          <div class="cd" style="background:#FFFFFF;" onclick="setClr('#FFFFFF',this)" title="White"></div>
+        </div>
+        <select id="bsz" onchange="bSize=+this.value" style="background:#0F172A;border:1px solid rgba(255,255,255,.1);color:#fff;border-radius:6px;padding:.22rem .4rem;font-size:.73rem;cursor:pointer;margin-left:.3rem;">
+          <option value="3">Thin</option><option value="6" selected>Medium</option>
+          <option value="12">Thick</option><option value="22">Jumbo</option>
+        </select>
+      </div>
+
+      <!-- Canvas Area -->
+      <div class="studio-body">
+        <video id="camVid" autoplay playsinline muted></video>
+        <canvas id="mainCanvas"></canvas>
+        <div id="fingerDot"></div>
+        <div id="gestureBox">☝️ Draw Mode</div>
+        <div id="statusBar">🖱 Mouse mode — Enable Camera for hand tracking</div>
+        <div id="camPH">
+          <div class="ph-icon">📷</div>
+          <div class="ph-txt">Click <strong style="color:var(--ac)">Enable Camera</strong> to start air drawing<br/>
+          ☝️ Show index finger → Draw &nbsp;|&nbsp; ✌️ Peace sign → Pause<br/>
+          ✊ Fist → Erase &nbsp;|&nbsp; Or use your mouse below</div>
+        </div>
+      </div>
+    </div>
+    <p style="color:rgba(255,255,255,.3);font-size:.75rem;margin-top:.65rem;text-align:center;">🔒 Camera stays in your browser — no data sent anywhere. Uses MediaPipe JS for hand detection.</p>
+  </div>
+</section>
+
+<!-- TECHNOLOGY -->
+<section id="technology" style="background:rgba(30,41,59,.25);">
+  <div class="wrap">
+    <div class="tag">Technology</div>
+    <h2 class="sec-h">Built with <span class="gr-t">Cutting-Edge</span> Tech</h2>
+    <div class="tg">
+      <div class="tc"><span style="font-size:2rem;display:block;margin-bottom:.65rem;">🐍</span><div style="font-weight:700;font-size:.88rem;">Python</div><div style="color:rgba(255,255,255,.4);font-size:.74rem;margin-top:.2rem;">Core backend</div></div>
+      <div class="tc"><span style="font-size:2rem;display:block;margin-bottom:.65rem;">👁</span><div style="font-weight:700;font-size:.88rem;">OpenCV</div><div style="color:rgba(255,255,255,.4);font-size:.74rem;margin-top:.2rem;">Computer vision</div></div>
+      <div class="tc"><span style="font-size:2rem;display:block;margin-bottom:.65rem;">🖐</span><div style="font-weight:700;font-size:.88rem;">MediaPipe</div><div style="color:rgba(255,255,255,.4);font-size:.74rem;margin-top:.2rem;">Hand tracking AI</div></div>
+      <div class="tc"><span style="font-size:2rem;display:block;margin-bottom:.65rem;">🔢</span><div style="font-weight:700;font-size:.88rem;">NumPy</div><div style="color:rgba(255,255,255,.4);font-size:.74rem;margin-top:.2rem;">Array processing</div></div>
+      <div class="tc"><span style="font-size:2rem;display:block;margin-bottom:.65rem;">🌐</span><div style="font-weight:700;font-size:.88rem;">Flask API</div><div style="color:rgba(255,255,255,.4);font-size:.74rem;margin-top:.2rem;">REST backend</div></div>
+      <div class="tc"><span style="font-size:2rem;display:block;margin-bottom:.65rem;">⚛️</span><div style="font-weight:700;font-size:.88rem;">React</div><div style="color:rgba(255,255,255,.4);font-size:.74rem;margin-top:.2rem;">UI framework</div></div>
+      <div class="tc"><span style="font-size:2rem;display:block;margin-bottom:.65rem;">☕</span><div style="font-weight:700;font-size:.88rem;">Spring Boot</div><div style="color:rgba(255,255,255,.4);font-size:.74rem;margin-top:.2rem;">Java API layer</div></div>
+      <div class="tc"><span style="font-size:2rem;display:block;margin-bottom:.65rem;">🧠</span><div style="font-weight:700;font-size:.88rem;">TensorFlow</div><div style="color:rgba(255,255,255,.4);font-size:.74rem;margin-top:.2rem;">Shape detection</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="wrap">
+    <div class="tag">Contact</div>
+    <h2 class="sec-h">Get in <span class="gr-t">Touch</span></h2>
+    <div class="cg">
+      <div>
+        <p style="color:rgba(255,255,255,.6);line-height:1.75;margin-bottom:1.25rem;font-size:.92rem;">Have questions about AirSketch AI? Want to collaborate or contribute? We'd love to hear from you!</p>
+        <div style="display:flex;flex-direction:column;gap:.85rem;">
+          <div style="display:flex;align-items:center;gap:.75rem;color:rgba(255,255,255,.65);font-size:.88rem;"><span>📧</span><span>hello@airsketch.ai</span></div>
+          <div style="display:flex;align-items:center;gap:.75rem;color:rgba(255,255,255,.65);font-size:.88rem;"><span>🌐</span><span>www.airsketch.ai</span></div>
+          <div style="display:flex;align-items:center;gap:.75rem;color:rgba(255,255,255,.65);font-size:.88rem;"><span>📍</span><span>Built with ❤️ in India 🇮🇳</span></div>
+          <div style="display:flex;align-items:center;gap:.75rem;color:rgba(255,255,255,.65);font-size:.88rem;"><span>🐙</span><span>github.com/airsketch-ai</span></div>
+        </div>
+      </div>
+      <div class="cf">
+        <div class="fr">
+          <div class="fg2"><label>First Name</label><input type="text" placeholder="Rahul"/></div>
+          <div class="fg2"><label>Last Name</label><input type="text" placeholder="Sharma"/></div>
+        </div>
+        <div class="fg2"><label>Email</label><input type="email" placeholder="rahul@example.com"/></div>
+        <div class="fg2"><label>Subject</label><input type="text" placeholder="Collaboration / Feedback"/></div>
+        <div class="fg2"><label>Message</label><textarea placeholder="Tell us about your idea..."></textarea></div>
+        <button class="btn btn-p" style="width:100%;" onclick="notify('✅ Message sent!')">Send Message 🚀</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-g">
+    <div>
+      <div class="logo" style="display:inline-block;">AirSketch AI ✨</div>
+      <p>Transform hand gestures into digital art in real time. No mouse, no touch — just your imagination.</p>
+      <div class="soc">
+        <div class="sb" onclick="notify('🐙 GitHub coming soon!')">🐙</div>
+        <div class="sb" onclick="notify('🐦 Twitter coming soon!')">🐦</div>
+        <div class="sb" onclick="notify('💼 LinkedIn coming soon!')">💼</div>
+        <div class="sb" onclick="notify('▶️ YouTube coming soon!')">▶️</div>
+      </div>
+    </div>
+    <div><h4>Product</h4><ul><li><span onclick="goTo('features')">Features</span></li><li><span onclick="goTo('how-it-works')">How It Works</span></li><li><span onclick="goTo('demo')">Demo</span></li><li><span onclick="goTo('technology')">Technology</span></li></ul></div>
+    <div><h4>Resources</h4><ul><li><span onclick="notify('📄 Docs coming soon!')">Documentation</span></li><li><span onclick="notify('🔌 API coming soon!')">API Reference</span></li><li><span onclick="notify('⭐ GitHub coming soon!')">GitHub Repo</span></li><li><span onclick="notify('📝 Changelog coming soon!')">Changelog</span></li></ul></div>
+    <div><h4>Company</h4><ul><li><span onclick="openModal('about')">About Us</span></li><li><span onclick="goTo('contact')">Contact</span></li><li><span onclick="notify('🔒 Privacy coming soon!')">Privacy Policy</span></li><li><span onclick="notify('📋 Terms coming soon!')">Terms of Use</span></li></ul></div>
+  </div>
+  <div class="foot-b">
+    <p>© 2026 AirSketch AI. All Rights Reserved. Made with ❤️ in India 🇮🇳</p>
+    <p>Draw in the Air, Create Anywhere ✨</p>
+  </div>
+</footer>
+
+<!-- ABOUT MODAL -->
+<div class="modal-bg" id="aboutModal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-hd">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div class="tag" style="margin-bottom:.45rem;">About This Project</div>
+          <h2 style="font-size:1.35rem;font-weight:800;background:var(--gr);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">AirSketch AI ✨</h2>
+          <p style="color:rgba(255,255,255,.4);font-size:.78rem;font-style:italic;margin-top:.2rem;">"Draw in the Air, Create Without Limits."</p>
+        </div>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="m-sec"><p style="color:rgba(255,255,255,.65);line-height:1.8;font-size:.87rem;margin-bottom:.6rem;">AirSketch AI is an innovative computer vision application that lets users draw in the air using hand gestures — no physical device, mouse, stylus, or touchscreen required.</p><p style="color:rgba(255,255,255,.65);line-height:1.8;font-size:.87rem;">Real-time hand tracking translates your finger movements into fluid digital strokes on a virtual canvas.</p></div>
+      <div class="m-sec"><h3>⚡ Key Features</h3><div class="feat-chips"><div class="chip">🖐 Real-time hand gesture detection</div><div class="chip">🚫 Touchless virtual drawing</div><div class="chip">🎨 Multiple brush colors & sizes</div><div class="chip">🧹 Eraser & canvas clear tools</div><div class="chip">💾 Save & download as PNG</div><div class="chip">📱 Fully responsive design</div></div></div>
+      <div class="m-sec"><h3>🔬 Technologies Used</h3><div class="pill-grid"><span class="pill pill-b">🐍 Python</span><span class="pill pill-b">👁 OpenCV</span><span class="pill pill-p">🖐 MediaPipe</span><span class="pill pill-p">🔢 NumPy</span><span class="pill pill-c">⚛️ React.js</span><span class="pill pill-c">🌐 Flask</span><span class="pill pill-c">☕ Spring Boot</span></div></div>
+      <div class="m-sec"><h3>🔄 How It Works</h3>
+        <div class="step-row"><div class="step-n">1</div><div style="color:rgba(255,255,255,.65);font-size:.85rem;line-height:1.6;">Webcam captures your live video feed in real time.</div></div>
+        <div class="step-row"><div class="step-n">2</div><div style="color:rgba(255,255,255,.65);font-size:.85rem;line-height:1.6;">MediaPipe detects 21 hand landmarks per frame.</div></div>
+        <div class="step-row"><div class="step-n">3</div><div style="color:rgba(255,255,255,.65);font-size:.85rem;line-height:1.6;">Index fingertip (landmark 8) position is extracted.</div></div>
+        <div class="step-row"><div class="step-n">4</div><div style="color:rgba(255,255,255,.65);font-size:.85rem;line-height:1.6;">Coordinates map to canvas pixels for drawing strokes.</div></div>
+        <div class="step-row"><div class="step-n">5</div><div style="color:rgba(255,255,255,.65);font-size:.85rem;line-height:1.6;">Gesture recognition switches between draw/erase/save.</div></div>
+      </div>
+      <div class="m-sec" style="background:linear-gradient(135deg,rgba(37,99,235,.1),rgba(124,58,237,.1));border:1px solid rgba(124,58,237,.18);border-radius:11px;padding:1rem 1.15rem;"><h3 style="color:#C4B5FD;">🎯 Project Objective</h3><p style="color:rgba(255,255,255,.6);font-size:.84rem;line-height:1.75;">AirSketch AI demonstrates the power of computer vision and human-computer interaction — showcasing real-world applications of AI, gesture recognition, and real-time image processing.</p></div>
+      <div class="m-sec"><h3>🚀 Future Enhancements</h3><div class="fut-chips"><div class="chip">🔷 AI shape recognition</div><div class="chip">🎙 Voice commands</div><div class="chip">🤝 Multi-hand collab</div><div class="chip">☁️ Cloud storage</div><div class="chip">✌️ Gesture shortcuts</div><div class="chip">🖌 Advanced effects</div></div></div>
+      <div style="text-align:center;border-top:1px solid rgba(255,255,255,.07);padding-top:1.1rem;">
+        <p style="font-size:.92rem;font-weight:700;background:linear-gradient(135deg,#2563EB,#06B6D4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">"Draw in the Air, Create Without Limits." ✨</p>
+        <p style="color:rgba(255,255,255,.22);font-size:.72rem;margin-top:.35rem;">© 2026 AirSketch AI</p>
+        <button class="btn btn-p" style="margin-top:.9rem;" onclick="closeModal()">Got It 👍</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<!-- ══════════════════════════════════════════
+     MediaPipe Hand Tracking via CDN
+══════════════════════════════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+<script>
+// ── NAV ──
+function goTo(id){const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'});}
+function toggleMob(){document.getElementById('mobMenu').classList.toggle('open');}
+function closeMob(){document.getElementById('mobMenu').classList.remove('open');}
+function openModal(id){document.getElementById(id+'Modal').classList.add('open');document.body.style.overflow='hidden';}
+function closeModal(){document.querySelectorAll('.modal-bg').forEach(m=>m.classList.remove('open'));document.body.style.overflow='';}
+let ntT;
+function notify(msg){const n=document.getElementById('notif');n.textContent=msg;n.classList.add('show');clearTimeout(ntT);ntT=setTimeout(()=>n.classList.remove('show'),3200);}
+
+// ── HERO MINI CANVAS ──
+const hc=document.getElementById('heroC'),hx=hc.getContext('2d');
+let hClr='#06B6D4',hDraw=false,hLX=0,hLY=0,hAuto=true,hT=0;
+function resH(){const p=hc.parentElement;hc.width=p.clientWidth;hc.height=p.clientHeight;}
+window.addEventListener('resize',resH);resH();
+hc.addEventListener('mousemove',e=>{
+  hAuto=false;const r=hc.getBoundingClientRect();const x=e.clientX-r.left,y=e.clientY-r.top;
+  if(hDraw){hx.beginPath();hx.moveTo(hLX,hLY);hx.lineTo(x,y);hx.strokeStyle=hClr;hx.lineWidth=3;hx.lineCap='round';hx.stroke();}
+  hLX=x;hLY=y;hDraw=true;
+});
+hc.addEventListener('mouseleave',()=>{hDraw=false;setTimeout(()=>{hAuto=true;autoH();},2500);});
+let hAF;
+function autoH(){
+  if(!hAuto)return;cancelAnimationFrame(hAF);hx.clearRect(0,0,hc.width,hc.height);
+  const cols=['#06B6D4','#7C3AED','#2563EB','#F59E0B','#EF4444'];let s=0;
+  function fr(){
+    if(!hAuto||s>280){if(hAuto){hT+=.5;setTimeout(autoH,500);}return;}
+    const t=(hT+s)*.027,x=hc.width/2+Math.cos(t*1.3)*hc.width*.28+Math.sin(t*.6)*hc.width*.07,y=hc.height/2+Math.sin(t)*hc.height*.3+Math.cos(t*1.4)*hc.height*.07;
+    hx.beginPath();hx.arc(x,y,2.5,0,Math.PI*2);hx.fillStyle=cols[Math.floor(s/40)%cols.length];hx.fill();
+    s++;hAF=requestAnimationFrame(fr);
+  }fr();
+}
+autoH();
+
+// ── MAIN STUDIO ──
+const vid=document.getElementById('camVid');
+const mc=document.getElementById('mainCanvas');
+const mx=mc.getContext('2d');
+const fdot=document.getElementById('fingerDot');
+const gbox=document.getElementById('gestureBox');
+const sbar=document.getElementById('statusBar');
+const camPH=document.getElementById('camPH');
+
+let dClr='#06B6D4',dTool='brush',bSize=6;
+let mDraw=false,mLX=0,mLY=0;
+let camOn=false,mpReady=false,stream=null;
+let prevFX=-1,prevFY=-1;
+
+function resizeMain(){
+  const p=mc.parentElement;
+  const tmp=document.createElement('canvas');tmp.width=mc.width;tmp.height=mc.height;
+  tmp.getContext('2d').drawImage(mc,0,0);
+  mc.width=p.clientWidth;mc.height=p.clientHeight;
+  mx.drawImage(tmp,0,0);
+}
+window.addEventListener('resize',()=>setTimeout(resizeMain,100));
+setTimeout(resizeMain,200);
+
+function setClr(c,el){dClr=c;document.querySelectorAll('.cd').forEach(d=>d.classList.remove('on'));el.classList.add('on');}
+function setTool(t){
+  dTool=t;
+  document.getElementById('brushBtn').classList.toggle('on',t==='brush');
+  document.getElementById('eraserBtn').classList.toggle('on',t==='eraser');
+}
+function clearCanvas(){mx.clearRect(0,0,mc.width,mc.height);notify('🗑 Canvas cleared!');}
+function saveCanvas(){
+  const out=document.createElement('canvas');out.width=mc.width;out.height=mc.height;
+  const oc=out.getContext('2d');
+  oc.fillStyle='#060d1a';oc.fillRect(0,0,out.width,out.height);
+  if(camOn&&vid.readyState>=2){oc.save();oc.translate(out.width,0);oc.scale(-1,1);oc.drawImage(vid,0,0,out.width,out.height);oc.restore();}
+  oc.drawImage(mc,0,0);
+  const a=document.createElement('a');a.download='airsketch-'+Date.now()+'.png';a.href=out.toDataURL();a.click();
+  notify('💾 Drawing saved as PNG!');
+}
+
+// Mouse drawing
+function gPos(e,c){
+  const r=c.getBoundingClientRect(),sx=c.width/r.width,sy=c.height/r.height;
+  if(e.touches)return{x:(e.touches[0].clientX-r.left)*sx,y:(e.touches[0].clientY-r.top)*sy};
+  return{x:(e.clientX-r.left)*sx,y:(e.clientY-r.top)*sy};
+}
+function doStroke(x,y,lx,ly){
+  mx.beginPath();mx.moveTo(lx,ly);mx.lineTo(x,y);
+  if(dTool==='eraser'){mx.globalCompositeOperation='destination-out';mx.strokeStyle='rgba(0,0,0,1)';mx.lineWidth=bSize*3;}
+  else{mx.globalCompositeOperation='source-over';mx.strokeStyle=dClr;mx.lineWidth=bSize;}
+  mx.lineCap='round';mx.lineJoin='round';mx.stroke();
+  mx.globalCompositeOperation='source-over';
+}
+mc.addEventListener('mousedown',e=>{if(camOn)return;mDraw=true;const p=gPos(e,mc);mLX=p.x;mLY=p.y;});
+mc.addEventListener('mousemove',e=>{if(camOn||!mDraw)return;const p=gPos(e,mc);doStroke(p.x,p.y,mLX,mLY);mLX=p.x;mLY=p.y;});
+mc.addEventListener('mouseup',()=>mDraw=false);
+mc.addEventListener('mouseleave',()=>mDraw=false);
+mc.addEventListener('touchstart',e=>{e.preventDefault();if(camOn)return;mDraw=true;const p=gPos(e,mc);mLX=p.x;mLY=p.y;},{passive:false});
+mc.addEventListener('touchmove',e=>{e.preventDefault();if(camOn||!mDraw)return;const p=gPos(e,mc);doStroke(p.x,p.y,mLX,mLY);mLX=p.x;mLY=p.y;},{passive:false});
+mc.addEventListener('touchend',()=>mDraw=false);
+
+// ── MEDIAPIPE HAND TRACKING ──
+let hands=null,mpCam=null;
+
+function initMediaPipe(){
+  if(typeof Hands==='undefined'){
+    notify('⚠️ MediaPipe loading failed. Using mouse mode.');
+    return;
+  }
+  hands=new Hands({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`});
+  hands.setOptions({maxNumHands:1,modelComplexity:1,minDetectionConfidence:0.7,minTrackingConfidence:0.6});
+  hands.onResults(onHandResults);
+  mpReady=true;
+  notify('🤖 MediaPipe Hand Tracking ready!');
+}
+
+function onHandResults(results){
+  if(!camOn)return;
+  const W=mc.width,H=mc.height;
+
+  if(results.multiHandLandmarks && results.multiHandLandmarks.length>0){
+    const lm=results.multiHandLandmarks[0];
+
+    // Index fingertip = landmark 8 (mirrored because video is flipped)
+    const fx=(1-lm[8].x)*W;
+    const fy=lm[8].y*H;
+
+    // Detect gesture
+    const gesture=detectGesture(lm);
+
+    // Show finger dot
+    fdot.style.display='block';
+    fdot.style.left=fx+'px';
+    fdot.style.top=fy+'px';
+
+    // Update gesture box
+    gbox.style.display='block';
+
+    if(gesture==='draw'){
+      gbox.textContent='☝️ Drawing...';
+      fdot.style.borderColor='#06B6D4';fdot.style.boxShadow='0 0 14px #06B6D4';
+      setTool('brush');
+      sbar.textContent='☝️ Index finger detected — Drawing!';
+      if(prevFX>=0){doStroke(fx,fy,prevFX,prevFY);}
+      prevFX=fx;prevFY=fy;
+
+    }else if(gesture==='erase'){
+      gbox.textContent='✊ Eraser Mode';
+      fdot.style.borderColor='#EF4444';fdot.style.boxShadow='0 0 14px #EF4444';
+      setTool('eraser');
+      sbar.textContent='✊ Fist detected — Eraser mode!';
+      if(prevFX>=0){doStroke(fx,fy,prevFX,prevFY);}
+      prevFX=fx;prevFY=fy;
+
+    }else if(gesture==='pause'){
+      gbox.textContent='✌️ Paused';
+      fdot.style.borderColor='#F59E0B';fdot.style.boxShadow='0 0 14px #F59E0B';
+      sbar.textContent='✌️ Peace sign — Pen lifted (moving without drawing)';
+      prevFX=fx;prevFY=fy; // move without drawing
+
+    }else if(gesture==='save'){
+      gbox.textContent='👍 Saving...';
+      sbar.textContent='👍 Thumbs up — Saving drawing!';
+      prevFX=-1;prevFY=-1;
+      saveCanvas();
+
+    }else{
+      gbox.textContent='🖐 Hand detected';
+      sbar.textContent='🖐 Open palm — Show ☝️ index finger to draw';
+      prevFX=-1;prevFY=-1;
+    }
+
+  }else{
+    fdot.style.display='none';
+    gbox.style.display='none';
+    sbar.textContent='👋 No hand detected — Show your hand to the camera';
+    prevFX=-1;prevFY=-1;
+  }
+}
+
+function detectGesture(lm){
+  // Finger tips: thumb=4, index=8, middle=12, ring=16, pinky=20
+  // PIP joints: thumb=3, index=6, middle=10, ring=14, pinky=18
+  const tips=[4,8,12,16,20];
+  const pips=[3,6,10,14,18];
+
+  const indexUp=lm[8].y < lm[6].y;
+  const middleUp=lm[12].y < lm[10].y;
+  const ringUp=lm[16].y < lm[14].y;
+  const pinkyUp=lm[20].y < lm[18].y;
+  const thumbUp=lm[4].y < lm[3].y;
+
+  // Count raised fingers
+  const raised=[thumbUp,indexUp,middleUp,ringUp,pinkyUp].filter(Boolean).length;
+
+  if(thumbUp && !indexUp && !middleUp && !ringUp && !pinkyUp) return 'save';   // 👍
+  if(indexUp && middleUp && !ringUp && !pinkyUp) return 'pause';               // ✌️
+  if(indexUp && !middleUp && !ringUp && !pinkyUp) return 'draw';               // ☝️
+  if(raised<=1 && !indexUp && !middleUp) return 'erase';                       // ✊
+  return 'open';
+}
+
+// ── CAMERA TOGGLE ──
+async function toggleCam(){
+  const btn=document.getElementById('camBtn');
+  if(!camOn){
+    try{
+      stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:1280},height:{ideal:720}},audio:false});
+      vid.srcObject=stream;
+      vid.style.display='block';
+      camPH.classList.add('hide');
+      camOn=true;
+      btn.textContent='🔴 Stop Camera';
+      btn.classList.add('on');
+      mc.style.cursor='none';
+      sbar.textContent='📷 Camera ON — Show ☝️ your index finger to draw!';
+      notify('📷 Camera ON! Show ☝️ index finger to draw!');
+
+      // Init MediaPipe on first camera start
+      if(!mpReady) initMediaPipe();
+
+      // Start MediaPipe camera loop
+      if(mpReady && hands){
+        mpCam=new Camera(vid,{
+          onFrame:async()=>{await hands.send({image:vid});},
+          width:1280,height:720
+        });
+        mpCam.start();
+      }else{
+        // Fallback: try to init and start
+        setTimeout(()=>{
+          if(mpReady && hands && !mpCam){
+            mpCam=new Camera(vid,{
+              onFrame:async()=>{await hands.send({image:vid});},
+              width:1280,height:720
+            });
+            mpCam.start();
+          }
+        },2000);
+      }
+
+    }catch(err){
+      console.error(err);
+      if(err.name==='NotAllowedError') notify('❌ Camera permission denied! Please allow camera in browser settings.');
+      else if(err.name==='NotFoundError') notify('❌ No camera found on this device.');
+      else notify('❌ Camera error: '+err.message);
+    }
+  }else{
+    // Stop camera
+    if(mpCam){mpCam.stop();mpCam=null;}
+    if(stream)stream.getTracks().forEach(t=>t.stop());
+    vid.srcObject=null;
+    vid.style.display='none';
+    camPH.classList.remove('hide');
+    fdot.style.display='none';
+    gbox.style.display='none';
+    camOn=false;
+    btn.textContent='📷 Enable Camera';
+    btn.classList.remove('on');
+    mc.style.cursor='crosshair';
+    sbar.textContent='🖱 Mouse mode — Enable Camera for hand tracking';
+    prevFX=-1;prevFY=-1;
+    notify('📷 Camera stopped.');
+  }
+}
+
+// Pre-load MediaPipe on page load
+window.addEventListener('load',()=>{
+  setTimeout(initMediaPipe, 1000);
+});
+
+// Scroll nav highlight
+const secs=document.querySelectorAll('section[id]');
+window.addEventListener('scroll',()=>{
+  let cur='';
+  secs.forEach(s=>{if(window.scrollY>=s.offsetTop-100)cur=s.id;});
+  document.querySelectorAll('.nav-links li').forEach((li,i)=>{
+    const ids=['home','features','how-it-works','demo','technology','contact'];
+    li.style.color=ids[i]===cur?'var(--ac)':'rgba(255,255,255,0.7)';
+  });
+});
+</script>
+</body>
+</html>
